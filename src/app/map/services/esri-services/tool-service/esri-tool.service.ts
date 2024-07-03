@@ -46,7 +46,7 @@ import {ElevationProfileActions} from '../../../../state/map/actions/elevation-p
 import {EsriGraphicToInternalDrawingRepresentationUtils} from '../utils/esri-graphic-to-internal-drawing-representation.utils';
 import {InternalDrawingRepresentationToEsriGraphicUtils} from '../utils/internal-drawing-representation-to-esri-graphic.utils';
 
-const HANDLE_GROUP_KEY = 'EsriToolService';
+export const HANDLE_GROUP_KEY = 'EsriToolService';
 
 /**
  * Handles the measurement and sketch drawings. It employs the Strategy pattern to delegate the actual drawing logic to dedicated

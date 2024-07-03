@@ -22,19 +22,23 @@ export abstract class AbstractEsriMeasurementStrategy<
   }
 
   public start(): void {
+    let previousLabel: Graphic | undefined;
     this.sketchViewModel.create(this.tool, {mode: 'click'});
     this.sketchViewModel.on('create', ({state, graphic}) => {
       let labelConfiguration: {label: Graphic; labelText: string};
-      let graphicIdentifier: string;
       switch (state) {
-        case 'active':
         case 'start':
-        case 'cancel':
           break; // currently, these events do not trigger any action
+        case 'cancel':
+          if (previousLabel) {
+            this.layer.remove(previousLabel);
+          }
+          break;
+        case 'active':
+          previousLabel = this.addLabelToLayer(graphic, previousLabel).label;
+          break;
         case 'complete':
-          graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
-          labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
-          this.layer.add(labelConfiguration.label);
+          labelConfiguration = this.addLabelToLayer(graphic);
           this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
           break;
       }
@@ -49,7 +53,7 @@ export abstract class AbstractEsriMeasurementStrategy<
    */
   protected abstract createLabelConfigurationForGeometry(geometry: TGeometry): LabelConfiguration;
 
-  private createLabelForGeometry(geometry: TGeometry, belongsToGraphic: string): {label: Graphic; labelText: string} {
+  protected createLabelForGeometry(geometry: TGeometry, belongsToGraphic: string): {label: Graphic; labelText: string} {
     const {location, symbolization} = this.createLabelConfigurationForGeometry(geometry);
     const label = new Graphic({
       geometry: location,
@@ -61,5 +65,15 @@ export abstract class AbstractEsriMeasurementStrategy<
     this.setBelongsToAttributeOnGraphic(label, belongsToGraphic);
 
     return {label, labelText: symbolization.text};
+  }
+
+  private addLabelToLayer(graphic: Graphic, previousLabel?: Graphic | undefined): {label: Graphic; labelText: string} {
+    const graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
+    const labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
+    if (previousLabel) {
+      this.layer.remove(previousLabel);
+    }
+    this.layer.add(labelConfiguration.label);
+    return labelConfiguration;
   }
 }

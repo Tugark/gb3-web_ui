@@ -4,6 +4,8 @@ import Point from '@arcgis/core/geometry/Point';
 import {NumberUtils} from '../../../../../../shared/utils/number.utils';
 import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
+import Graphic from '@arcgis/core/Graphic';
+import {HANDLE_GROUP_KEY} from '../../esri-tool.service';
 
 export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrategy<Point, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'point';
@@ -20,6 +22,18 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
 
     this.sketchViewModel.pointSymbol = pointSymbol;
     this.labelSymbolization = labelSymbolization;
+    let previousLabel: Graphic | undefined = undefined;
+    const handle = this.sketchViewModel.view.on('pointer-move', (event) => {
+      const point = this.sketchViewModel.view.toMap({x: event.x, y: event.y});
+      const labelConfiguration = this.createLabelConfigurationForGeometry(point);
+      const label = new Graphic({geometry: labelConfiguration.location, symbol: labelConfiguration.symbolization});
+      if (previousLabel) {
+        this.layer.remove(previousLabel);
+      }
+      this.layer.add(label);
+      previousLabel = label;
+    });
+    this.sketchViewModel.view.addHandles([handle], HANDLE_GROUP_KEY);
   }
 
   protected override createLabelConfigurationForGeometry(geometry: Point): LabelConfiguration {
