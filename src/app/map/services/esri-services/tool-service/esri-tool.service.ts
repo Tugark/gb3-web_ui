@@ -244,6 +244,9 @@ export class EsriToolService implements ToolService, OnDestroy, DrawingCallbackH
       (event) => {
         if (event.key === 'Escape') {
           this.endDrawing();
+          if (this.toolStrategy instanceof EsriPointMeasurementStrategy) {
+            this.toolStrategy.removeLabelOnEscape();
+          }
         }
       },
     );
