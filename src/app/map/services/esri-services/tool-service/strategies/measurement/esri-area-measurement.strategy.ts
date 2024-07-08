@@ -46,14 +46,18 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
    * @private
    */
   private getRoundedPolygonAreaString(polygon: Polygon): string {
-    let unit = 'm²';
+    let areaUnit = 'm²';
+    let distanceUnit = 'm';
     let length = geometryEngine.planarArea(polygon, 'square-meters');
+    let circumference = geometryEngine.planarLength(polygon, 'meters');
 
     if (length > M2_TO_KM2_CONVERSION_THRESHOLD) {
       length = length / 1_000_000;
-      unit = 'km²';
+      circumference = circumference / 1_000;
+      areaUnit = 'km²';
+      distanceUnit = 'km';
     }
 
-    return `${NumberUtils.roundToDecimals(length, 2)} ${unit}`;
+    return `A: ${NumberUtils.roundToDecimals(length, 2)} ${areaUnit}\nU: ${NumberUtils.roundToDecimals(circumference, 2)} ${distanceUnit}`;
   }
 }
