@@ -147,7 +147,7 @@ describe('EsriLineMeasurementStrategy', () => {
       strategy.svm.emit('create', {state: 'complete', graphic: graphic});
 
       const addedGraphic = layer.graphics.getItemAt(0);
-      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`${lengthOfLine} m`);
+      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`l: ${lengthOfLine} m`);
     });
 
     it('rounds the length to 2 decimals', () => {
@@ -173,7 +173,7 @@ describe('EsriLineMeasurementStrategy', () => {
 
       const expected = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)).toFixed(2);
       const addedGraphic = layer.graphics.getItemAt(0);
-      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`${expected} m`);
+      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`l: ${expected} m`);
     });
 
     it('rounds the length to km after 10001 metres', () => {
@@ -196,7 +196,7 @@ describe('EsriLineMeasurementStrategy', () => {
 
       const addedGraphic = layer.graphics.getItemAt(0);
       const expextedLength = Math.round(lengthOfLine / 1000);
-      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`${expextedLength} km`);
+      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`l: ${expextedLength} km`);
     });
   });
 

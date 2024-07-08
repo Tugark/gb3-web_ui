@@ -138,7 +138,7 @@ describe('EsriToolService', () => {
       store.overrideSelector(selectDrawingLayers, [{id: userDrawingLayerId} as DrawingActiveMapItem]);
       store.refreshState();
 
-      service.initializeMeasurement('measure-point');
+      service.initializeMeasurement('measure-line');
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect((spy.calls.first().args[0] as any).remove).toBeDefined(); // we know that it must be a WatchHandle

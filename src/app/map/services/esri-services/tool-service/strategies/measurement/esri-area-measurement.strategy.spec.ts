@@ -187,7 +187,8 @@ describe('EsriAreaMeasurementStrategy', () => {
 
       const addedGraphic = layer.graphics.getItemAt(0);
       const expectedArea = Math.pow(sideLength, 2);
-      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`${expectedArea} m²`);
+      const expectedCircumference = sideLength * 4;
+      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`A: ${expectedArea} m²\nU: ${expectedCircumference} m`);
     });
 
     it('rounds the area to 2 decimals', () => {
@@ -218,8 +219,9 @@ describe('EsriAreaMeasurementStrategy', () => {
       strategy.svm.emit('create', {state: 'complete', graphic: graphic});
 
       const expected = (sideLength * sideLength).toFixed(2);
+      const expectedCircumference = (sideLength * 4).toFixed(2);
       const addedGraphic = layer.graphics.getItemAt(0);
-      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`${expected} m²`);
+      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`A: ${expected} m²\nU: ${expectedCircumference} m`);
     });
 
     it('rounds the area to km² after 100000 square metres', () => {
@@ -251,7 +253,8 @@ describe('EsriAreaMeasurementStrategy', () => {
 
       const addedGraphic = layer.graphics.getItemAt(0);
       const expextedLength = Math.round((sideLength * sideLength) / 1_000_000);
-      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`${expextedLength} km²`);
+      const expectedCircumference = Math.round(sideLength * 4) / 1_000;
+      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`A: ${expextedLength} km²\nU: ${expectedCircumference} km`);
     });
   });
 
