@@ -9,12 +9,15 @@ import MapView from '@arcgis/core/views/MapView';
 import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
 import Point from '@arcgis/core/geometry/Point';
+import {HANDLE_GROUP_KEY} from '../../esri-tool.service';
+import {PolygonType} from '../../../../../types/polygon.type';
 
 const M2_TO_KM2_CONVERSION_THRESHOLD = 100_000;
 
 export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy<Polygon, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'polygon';
   private readonly labelSymbolization: TextSymbol;
+  private labelPosition: Point | undefined;
 
   constructor(
     layer: GraphicsLayer,
@@ -22,11 +25,17 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
     polygonSymbol: SimpleFillSymbol,
     labelSymbolization: TextSymbol,
     completeDrawingCallbackHandler: DrawingCallbackHandler['completeMeasurement'],
+    polygonType: PolygonType,
   ) {
     super(layer, mapView, completeDrawingCallbackHandler);
 
+    this.tool = polygonType;
     this.sketchViewModel.polygonSymbol = polygonSymbol;
     this.labelSymbolization = labelSymbolization;
+    const handle = this.sketchViewModel.view.on('pointer-move', (event) => {
+      this.labelPosition = this.sketchViewModel.view.toMap({x: event.x, y: event.y});
+    });
+    this.sketchViewModel.view.addHandles([handle], HANDLE_GROUP_KEY);
   }
 
   protected override createLabelConfigurationForGeometry(geometry: Polygon): LabelConfiguration {
@@ -36,11 +45,14 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
   }
 
   private getLabelPosition(geometry: Polygon): Point {
-    return geometry.centroid;
+    if (this.isDrawingFinished) {
+      return geometry.centroid;
+    }
+    return this.labelPosition!;
   }
 
   /**
-   * Returns the area string of the given polygon, rounded to two decimals and converted to km2 if it is larger than
+   * Returns the area and circumference string of the given polygon, rounded to two decimals and converted to km2 if it is larger than
    * the defined threshold in M2_TO_KM2_CONVERSION_THRESHOLD.
    * @param polygon
    * @private
@@ -48,16 +60,17 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
   private getRoundedPolygonAreaString(polygon: Polygon): string {
     let areaUnit = 'm²';
     let distanceUnit = 'm';
-    let length = geometryEngine.planarArea(polygon, 'square-meters');
-    let circumference = geometryEngine.planarLength(polygon, 'meters');
+    let area = geometryEngine.planarArea(polygon, 'square-meters');
+    let distance = this.tool === 'polygon' ? geometryEngine.planarLength(polygon, 'meters') : Math.sqrt(area / Math.PI);
+    const distanceSymbol = this.tool === 'polygon' ? 'U' : 'r';
 
-    if (length > M2_TO_KM2_CONVERSION_THRESHOLD) {
-      length = length / 1_000_000;
-      circumference = circumference / 1_000;
+    if (area > M2_TO_KM2_CONVERSION_THRESHOLD) {
+      area = area / 1_000_000;
+      distance = distance / 1_000;
       areaUnit = 'km²';
       distanceUnit = 'km';
     }
 
-    return `A: ${NumberUtils.roundToDecimals(length, 2)} ${areaUnit}\nU: ${NumberUtils.roundToDecimals(circumference, 2)} ${distanceUnit}`;
+    return `A: ${NumberUtils.roundToDecimals(area, 2)} ${areaUnit}\n${distanceSymbol}: ${NumberUtils.roundToDecimals(distance, 2)} ${distanceUnit}`;
   }
 }

@@ -46,6 +46,6 @@ export class EsriLineMeasurementStrategy extends AbstractEsriMeasurementStrategy
       unit = 'km';
     }
 
-    return `${NumberUtils.roundToDecimals(length, 2)} ${unit}`;
+    return `l: ${NumberUtils.roundToDecimals(length, 2)} ${unit}`;
   }
 }

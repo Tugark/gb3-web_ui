@@ -14,7 +14,6 @@ import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import {EsriSymbolizationService} from '../esri-symbolization.service';
 import {InternalDrawingLayer, UserDrawingLayer} from '../../../../shared/enums/drawing-layer.enum';
 import {DrawingActiveMapItem} from '../../../models/implementations/drawing.model';
-import {EsriAreaMeasurementStrategy} from './strategies/measurement/esri-area-measurement.strategy';
 import {EsriPointMeasurementStrategy} from './strategies/measurement/esri-point-measurement.strategy';
 import SimpleMarkerSymbol from '@arcgis/core/symbols/SimpleMarkerSymbol';
 import {ToolActions} from '../../../../state/map/actions/tool.actions';
@@ -45,6 +44,7 @@ import {EsriElevationProfileMeasurementStrategy} from './strategies/measurement/
 import {ElevationProfileActions} from '../../../../state/map/actions/elevation-profile.actions';
 import {EsriGraphicToInternalDrawingRepresentationUtils} from '../utils/esri-graphic-to-internal-drawing-representation.utils';
 import {InternalDrawingRepresentationToEsriGraphicUtils} from '../utils/internal-drawing-representation-to-esri-graphic.utils';
+import {EsriAreaMeasurementStrategy} from './strategies/measurement/esri-area-measurement.strategy';
 
 export const HANDLE_GROUP_KEY = 'EsriToolService';
 
@@ -245,7 +245,7 @@ export class EsriToolService implements ToolService, OnDestroy, DrawingCallbackH
         if (event.key === 'Escape') {
           this.endDrawing();
           if (this.toolStrategy instanceof EsriPointMeasurementStrategy) {
-            this.toolStrategy.removeLabelOnEscape();
+            this.toolStrategy.cleanup();
           }
         }
       },
@@ -280,6 +280,17 @@ export class EsriToolService implements ToolService, OnDestroy, DrawingCallbackH
           areaStyle,
           labelStyle,
           (geometry, label, labelText) => this.completeMeasurement(geometry, label, labelText),
+          'polygon',
+        );
+        break;
+      case 'measure-circle':
+        this.toolStrategy = new EsriAreaMeasurementStrategy(
+          layer,
+          this.esriMapViewService.mapView,
+          areaStyle,
+          labelStyle,
+          (geometry, label, labelText) => this.completeMeasurement(geometry, label, labelText),
+          'circle',
         );
         break;
       case 'measure-line':

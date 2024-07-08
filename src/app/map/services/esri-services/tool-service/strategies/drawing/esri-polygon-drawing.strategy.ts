@@ -4,8 +4,7 @@ import MapView from '@arcgis/core/views/MapView';
 import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {AbstractEsriDrawingStrategy} from '../abstract-esri-drawing.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
-
-type PolygonType = Extract<SupportedEsriTool, 'circle' | 'polygon' | 'rectangle'>;
+import {PolygonType} from '../../../../../types/polygon.type';
 
 export class EsriPolygonDrawingStrategy extends AbstractEsriDrawingStrategy<DrawingCallbackHandler['completeDrawing']> {
   protected readonly tool: SupportedEsriTool = 'polygon';

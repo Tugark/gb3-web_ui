@@ -5,8 +5,8 @@ import {NumberUtils} from '../../../../../../shared/utils/number.utils';
 import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
 import Graphic from '@arcgis/core/Graphic';
-import {HANDLE_GROUP_KEY} from '../../esri-tool.service';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
+import {HANDLE_GROUP_KEY} from '../../esri-tool.service';
 
 export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrategy<Point, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'point';
@@ -41,7 +41,8 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
     this.sketchViewModel.view.addHandles([drawHandle], HANDLE_GROUP_KEY);
   }
 
-  public removeLabelOnEscape() {
+  public override cleanup() {
+    this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
     if (this.previousLabel) {
       this.layer.remove(this.previousLabel);
     }

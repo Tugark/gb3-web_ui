@@ -16,6 +16,7 @@ export abstract class AbstractEsriMeasurementStrategy<
   TDrawingCallbackHandler extends DrawingCallbackHandler['completeMeasurement'],
 > extends AbstractEsriDrawableToolStrategy<TDrawingCallbackHandler> {
   public readonly internalLayerType: UserDrawingLayer = UserDrawingLayer.Measurements;
+  protected isDrawingFinished = false;
 
   protected constructor(layer: GraphicsLayer, mapView: MapView, completeDrawingCallbackHandler: TDrawingCallbackHandler) {
     super(layer, mapView, completeDrawingCallbackHandler);
@@ -33,16 +34,23 @@ export abstract class AbstractEsriMeasurementStrategy<
           if (previousLabel) {
             this.layer.remove(previousLabel);
           }
+          this.cleanup();
           break;
         case 'active':
           previousLabel = this.addLabelToLayer(graphic, previousLabel).label;
           break;
         case 'complete':
+          this.isDrawingFinished = true;
+          this.layer.remove(previousLabel!);
           labelConfiguration = this.addLabelToLayer(graphic);
           this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
           break;
       }
     });
+  }
+
+  public cleanup(): void {
+    // Only implemented in EsriPointMeasurementStrategy
   }
 
   /**
