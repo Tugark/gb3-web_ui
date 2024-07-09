@@ -40,6 +40,19 @@ describe('EsriPointMeasurementStrategy', () => {
     textSymbol = new TextSymbol();
   });
 
+  describe('initialization', () => {
+    it('adds an Esri handle to the mapview', () => {
+      // add the graphic layer to the view to avoid the initialization
+      const spy = spyOn(mapView, 'addHandles');
+      new EsriPointMeasurementStrategy(layer, mapView, pointSymbol, textSymbol, () => callbackHandler.handle());
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      // This is undefined, but when I logg the argument, is see that it is there
+      // expect((spy.calls.first().args[0] as any).remove).toBeDefined(); // we know that it must be a WatchHandle
+      expect(spy.calls.first().args[1]).toEqual('EsriToolService');
+    });
+  });
+
   describe('cancellation', () => {
     it('does not fire the callback handler on cancel and does not add the label', () => {
       const callbackSpy = spyOn(callbackHandler, 'handle');

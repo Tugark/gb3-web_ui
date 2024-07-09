@@ -54,6 +54,31 @@ describe('EsriLineMeasurementStrategy', () => {
     });
   });
 
+  describe('activation', () => {
+    it('adds the label to the layer on activation', () => {
+      const strategy = new EsriLineMeasurementStrategyWrapper(layer, mapView, lineSymbol, textSymbol, () => callbackHandler.handle());
+      const previousLabelMock = undefined;
+      const addLabelSpy = spyOn(strategy, 'addLabelToLayer').and.returnValue({label: new Graphic(), labelText: ''});
+
+      const graphic = new Graphic({
+        geometry: new Polyline({
+          spatialReference: {wkid: 2056},
+          paths: [
+            [
+              [0, 0],
+              [12, 0],
+            ],
+          ],
+        }),
+      });
+
+      strategy.start();
+      strategy.svm.emit('create', {state: 'active', graphic: graphic});
+
+      expect(addLabelSpy).toHaveBeenCalledWith(graphic, previousLabelMock);
+    });
+  });
+
   describe('completion', () => {
     it('adds the label and fires the callback handler on completion', () => {
       const callbackSpy = spyOn(callbackHandler, 'handle');

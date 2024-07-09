@@ -174,6 +174,11 @@ describe('EsriToolService', () => {
         service.initializeMeasurement('measure-area');
         expect(polygonSpy).toHaveBeenCalled();
       });
+      it(`sets the correct strategy for circle measurement`, () => {
+        const polygonSpy = spyOn(EsriAreaMeasurementStrategy.prototype, 'start');
+        service.initializeMeasurement('measure-circle');
+        expect(polygonSpy).toHaveBeenCalled();
+      });
     });
 
     describe('Drawing', () => {

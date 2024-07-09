@@ -8,6 +8,7 @@ import TextSymbol from '@arcgis/core/symbols/TextSymbol';
 import {AbstractEsriDrawableToolStrategy} from './abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../interfaces/drawing-callback-handler.interface';
 import {UserDrawingLayer} from '../../../../../shared/enums/drawing-layer.enum';
+import {HANDLE_GROUP_KEY} from '../esri-tool.service';
 
 export type LabelConfiguration = {location: Point; symbolization: TextSymbol};
 
@@ -34,6 +35,7 @@ export abstract class AbstractEsriMeasurementStrategy<
           if (previousLabel) {
             this.layer.remove(previousLabel);
           }
+          this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
           this.cleanup();
           break;
         case 'active':
@@ -75,7 +77,7 @@ export abstract class AbstractEsriMeasurementStrategy<
     return {label, labelText: symbolization.text};
   }
 
-  private addLabelToLayer(graphic: Graphic, previousLabel?: Graphic | undefined): {label: Graphic; labelText: string} {
+  public addLabelToLayer(graphic: Graphic, previousLabel?: Graphic | undefined): {label: Graphic; labelText: string} {
     const graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
     const labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
     if (previousLabel) {

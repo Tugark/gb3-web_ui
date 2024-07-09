@@ -8,6 +8,8 @@ import Point from '@arcgis/core/geometry/Point';
 import {EsriAreaMeasurementStrategy} from './esri-area-measurement.strategy';
 import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import Polygon from '@arcgis/core/geometry/Polygon';
+import Circle from '@arcgis/core/geometry/Circle';
+import {NumberUtils} from '../../../../../../shared/utils/number.utils';
 
 class EsriAreaMeasurementStrategyWrapper extends EsriAreaMeasurementStrategy {
   public get svm() {
@@ -158,7 +160,7 @@ describe('EsriAreaMeasurementStrategy', () => {
   });
 
   describe('label', () => {
-    it('adds the area of the polygon as label', () => {
+    it('adds the area and circumference of the polygon as label', () => {
       const strategy = new EsriAreaMeasurementStrategyWrapper(
         layer,
         mapView,
@@ -189,6 +191,33 @@ describe('EsriAreaMeasurementStrategy', () => {
       const expectedArea = Math.pow(sideLength, 2);
       const expectedCircumference = sideLength * 4;
       expect((addedGraphic.symbol as TextSymbol).text).toEqual(`A: ${expectedArea} m²\nU: ${expectedCircumference} m`);
+    });
+
+    it('adds the area and radius of the circle as label', () => {
+      const strategy = new EsriAreaMeasurementStrategyWrapper(
+        layer,
+        mapView,
+        fillSymbol,
+        textSymbol,
+        () => callbackHandler.handle(),
+        'circle',
+      );
+      const radius = 100;
+      const location = new Circle({
+        spatialReference: {wkid: 2056},
+        center: new Point({x: 0, y: 0, spatialReference: {wkid: 2056}}),
+        radius: radius,
+      });
+      const graphic = new Graphic({geometry: location});
+
+      strategy.start();
+      strategy.svm.complete();
+      strategy.svm.emit('create', {state: 'complete', graphic: graphic});
+
+      const addedGraphic = layer.graphics.getItemAt(0);
+      const expectedArea = NumberUtils.roundToDecimals(Math.PI * Math.pow(radius, 2), 2);
+      // Ensure the label text accurately reflects the circle's radius and calculated area
+      expect((addedGraphic.symbol as TextSymbol).text).toEqual(`A: ${expectedArea} m²\nr: ${radius} m`);
     });
 
     it('rounds the area to 2 decimals', () => {

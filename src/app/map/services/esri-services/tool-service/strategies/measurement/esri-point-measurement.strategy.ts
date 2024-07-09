@@ -31,9 +31,7 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
         const point = this.sketchViewModel.view.toMap({x: event.x, y: event.y});
         const labelConfiguration = this.createLabelConfigurationForGeometry(point);
         const label = new Graphic({geometry: labelConfiguration.location, symbol: labelConfiguration.symbolization});
-        if (this.previousLabel) {
-          this.layer.remove(this.previousLabel);
-        }
+        this.cleanup();
         this.layer.add(label);
         this.previousLabel = label;
       },
@@ -42,7 +40,6 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
   }
 
   public override cleanup() {
-    this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
     if (this.previousLabel) {
       this.layer.remove(this.previousLabel);
     }
