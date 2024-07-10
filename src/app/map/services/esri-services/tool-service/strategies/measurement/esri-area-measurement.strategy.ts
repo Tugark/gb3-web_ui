@@ -13,7 +13,8 @@ import {HANDLE_GROUP_KEY} from '../../esri-tool.service';
 import {PolygonType} from '../../../../../types/polygon.type';
 
 const M2_TO_KM2_CONVERSION_THRESHOLD = 100_000;
-
+const LABEL_DISPALCEMENT_X = 50;
+const LABEL_DISPALCEMENT_Y = 25;
 export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy<Polygon, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'polygon';
   private readonly labelSymbolization: TextSymbol;
@@ -33,7 +34,8 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
     this.sketchViewModel.polygonSymbol = polygonSymbol;
     this.labelSymbolization = labelSymbolization;
     const handle = this.sketchViewModel.view.on('pointer-move', (event) => {
-      this.labelPosition = this.sketchViewModel.view.toMap({x: event.x, y: event.y});
+      console.log(event.x, event.y);
+      this.labelPosition = this.sketchViewModel.view.toMap({x: event.x + LABEL_DISPALCEMENT_X, y: event.y - LABEL_DISPALCEMENT_Y});
     });
     this.sketchViewModel.view.addHandles([handle], HANDLE_GROUP_KEY);
   }
