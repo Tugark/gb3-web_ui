@@ -8,7 +8,7 @@ import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 import {selectDrawingLayers} from '../../../../state/map/selectors/drawing-layers.selector';
 import {Subscription, tap} from 'rxjs';
 import {EsriToolStrategy} from './interfaces/strategy.interface';
-import {EsriDefaultStrategy} from './strategies/measurement/esri-default.strategy';
+import {EsriDefaultStrategy} from './strategies/esri-default.strategy';
 import {EsriLineMeasurementStrategy} from './strategies/measurement/esri-line-measurement.strategy';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import {EsriSymbolizationService} from '../esri-symbolization.service';
@@ -247,9 +247,6 @@ export class EsriToolService implements ToolService, OnDestroy, DrawingCallbackH
       (event) => {
         if (event.key === 'Escape') {
           this.endDrawing();
-          if (this.toolStrategy instanceof EsriPointMeasurementStrategy) {
-            this.toolStrategy.cleanup();
-          }
         }
       },
     );

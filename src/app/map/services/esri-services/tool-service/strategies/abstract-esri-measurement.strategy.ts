@@ -48,7 +48,7 @@ export abstract class AbstractEsriMeasurementStrategy<
           case 'start':
             break; // currently, this event does not trigger any action
           case 'cancel':
-            this.cleanup();
+            this.removePreviousLabel();
             this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
             break;
           case 'active':
@@ -56,7 +56,7 @@ export abstract class AbstractEsriMeasurementStrategy<
             break;
           case 'complete':
             this.isDrawingFinished = true;
-            this.cleanup();
+            this.removePreviousLabel();
             labelConfiguration = this.addLabelToLayer(graphic);
             this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
             break;
@@ -69,7 +69,7 @@ export abstract class AbstractEsriMeasurementStrategy<
     this.labelPosition = this.sketchViewModel.view.toMap({x: event.x + this.labelDisplacementX, y: event.y - this.labelDisplacementY});
   }
 
-  public cleanup(): void {
+  protected removePreviousLabel(): void {
     if (this.previousLabel) {
       this.layer.remove(this.previousLabel);
     }
@@ -78,7 +78,7 @@ export abstract class AbstractEsriMeasurementStrategy<
   public addLabelToLayer(graphic: Graphic): {label: Graphic; labelText: string} {
     const graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
     const labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
-    this.cleanup();
+    this.removePreviousLabel();
     this.layer.add(labelConfiguration.label);
     return labelConfiguration;
   }
