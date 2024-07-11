@@ -8,8 +8,7 @@ import {DataDownloadSelection} from '../../../../../../shared/interfaces/data-do
 import {EsriGraphicToInternalDrawingRepresentationUtils} from '../../../utils/esri-graphic-to-internal-drawing-representation.utils';
 import {SupportedSrs} from '../../../../../../shared/types/supported-srs.type';
 import Graphic from '@arcgis/core/Graphic';
-
-type PolygonType = Extract<SupportedEsriTool, 'circle' | 'polygon' | 'rectangle'>;
+import {PolygonType} from '../../../../../types/polygon.type';
 
 export class EsriPolygonSelectionStrategy extends AbstractEsriDrawableToolStrategy<DrawingCallbackHandler['completeSelection']> {
   public readonly internalLayerType: InternalDrawingLayer = InternalDrawingLayer.Selection;

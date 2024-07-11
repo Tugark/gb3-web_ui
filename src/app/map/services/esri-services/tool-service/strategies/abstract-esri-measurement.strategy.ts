@@ -44,6 +44,7 @@ export abstract class AbstractEsriMeasurementStrategy<
         case 'complete':
           this.isDrawingFinished = true;
           this.layer.remove(previousLabel!);
+          this.cleanup();
           labelConfiguration = this.addLabelToLayer(graphic);
           this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
           break;
@@ -55,6 +56,16 @@ export abstract class AbstractEsriMeasurementStrategy<
     // Only implemented in EsriPointMeasurementStrategy
   }
 
+  public addLabelToLayer(graphic: Graphic, previousLabel?: Graphic | undefined): {label: Graphic; labelText: string} {
+    const graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
+    const labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
+    if (previousLabel) {
+      this.layer.remove(previousLabel);
+    }
+    this.layer.add(labelConfiguration.label);
+    return labelConfiguration;
+  }
+
   /**
    * Creates a label for a given geometry and returns the location and the symbolization as a TextSymbol. The labeltext ist container
    * within the symbolization.
@@ -63,7 +74,7 @@ export abstract class AbstractEsriMeasurementStrategy<
    */
   protected abstract createLabelConfigurationForGeometry(geometry: TGeometry): LabelConfiguration;
 
-  protected createLabelForGeometry(geometry: TGeometry, belongsToGraphic: string): {label: Graphic; labelText: string} {
+  private createLabelForGeometry(geometry: TGeometry, belongsToGraphic: string): {label: Graphic; labelText: string} {
     const {location, symbolization} = this.createLabelConfigurationForGeometry(geometry);
     const label = new Graphic({
       geometry: location,
@@ -75,15 +86,5 @@ export abstract class AbstractEsriMeasurementStrategy<
     this.setBelongsToAttributeOnGraphic(label, belongsToGraphic);
 
     return {label, labelText: symbolization.text};
-  }
-
-  public addLabelToLayer(graphic: Graphic, previousLabel?: Graphic | undefined): {label: Graphic; labelText: string} {
-    const graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
-    const labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
-    if (previousLabel) {
-      this.layer.remove(previousLabel);
-    }
-    this.layer.add(labelConfiguration.label);
-    return labelConfiguration;
   }
 }

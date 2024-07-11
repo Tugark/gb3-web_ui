@@ -8,6 +8,8 @@ import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.
 import Point from '@arcgis/core/geometry/Point';
 
 const M_TO_KM_CONVERSION_THRESHOLD = 10_000;
+// Used to displace the label from the cursor while drawing. Values are in pixels and are added to the cursor position for label positioning
+const LABEL_DISPLACEMENT_Y = 15;
 
 export class EsriLineMeasurementStrategy extends AbstractEsriMeasurementStrategy<Polyline, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'polyline';
@@ -34,7 +36,9 @@ export class EsriLineMeasurementStrategy extends AbstractEsriMeasurementStrategy
   }
 
   private getLabelPosition(geometry: Polyline): Point {
-    return geometry.getPoint(0, geometry.paths[0].length - 1);
+    const lastPoint = geometry.getPoint(0, geometry.paths[0].length - 1);
+    const screenCoords = this.sketchViewModel.view.toScreen(lastPoint);
+    return this.sketchViewModel.view.toMap({x: screenCoords.x, y: screenCoords.y - LABEL_DISPLACEMENT_Y});
   }
 
   private getRoundedPolylineLengthString(polyline: Polyline): string {

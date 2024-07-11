@@ -8,6 +8,9 @@ import Graphic from '@arcgis/core/Graphic';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 import {HANDLE_GROUP_KEY} from '../../esri-tool.service';
 
+// Used to displace the label from the cursor while drawing. Values are in pixels and are added to the cursor position for label positioning
+const LABEL_DISPLACEMENT_Y = 15;
+
 export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrategy<Point, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'point';
   private readonly labelSymbolization: TextSymbol;
@@ -52,7 +55,8 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
   }
 
   private getLabelPosition(geometry: Point): Point {
-    return geometry;
+    const screenCoords = this.sketchViewModel.view.toScreen(geometry);
+    return this.sketchViewModel.view.toMap({x: screenCoords.x, y: screenCoords.y - LABEL_DISPLACEMENT_Y});
   }
 
   private getCoordinateString(geometry: __esri.Point) {
