@@ -34,7 +34,7 @@ export abstract class AbstractEsriMeasurementStrategy<
       () => this.sketchViewModel.view,
       'pointer-move',
       (event) => {
-        this.handlePointerMove(event);
+        this.getLabelPositionFromPointerMove(event);
       },
     );
     this.sketchViewModel.view.addHandles([drawHandle], HANDLE_GROUP_KEY);
@@ -65,7 +65,7 @@ export abstract class AbstractEsriMeasurementStrategy<
     );
   }
 
-  protected handlePointerMove(event: __esri.ViewPointerMoveEvent): void {
+  protected getLabelPositionFromPointerMove(event: __esri.ViewPointerMoveEvent): void {
     this.labelPosition = this.sketchViewModel.view.toMap({x: event.x + this.labelDisplacementX, y: event.y - this.labelDisplacementY});
   }
 

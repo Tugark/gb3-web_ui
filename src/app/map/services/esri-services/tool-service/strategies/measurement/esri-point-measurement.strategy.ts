@@ -23,11 +23,11 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
     this.labelSymbolization = labelSymbolization;
   }
 
-  public override handlePointerMove(event: __esri.ViewPointerMoveEvent) {
+  public override getLabelPositionFromPointerMove(event: __esri.ViewPointerMoveEvent) {
     this.labelPosition = this.sketchViewModel.view.toMap({x: event.x, y: event.y - this.labelDisplacementY});
     const labelConfiguration = this.createLabelConfigurationForGeometry(this.labelPosition);
     const label = new Graphic({geometry: labelConfiguration.location, symbol: labelConfiguration.symbolization});
-    this.cleanup();
+    this.removePreviousLabel();
     this.layer.add(label);
     this.previousLabel = label;
   }
