@@ -167,6 +167,9 @@ export class EsriToolService implements ToolService, OnDestroy, DrawingCallbackH
    * @param strategySetter A setter function that takes a given layer and sets a strategy for the given tool.
    */
   private initializeTool(layer: GraphicsLayer, strategySetter: (layer: GraphicsLayer) => void) {
+    if (!(this.toolStrategy instanceof EsriDefaultStrategy)) {
+      this.cancelTool(); // cancels a tool when starting a new one while another one is still active
+    }
     strategySetter(layer);
     this.startDrawing();
   }

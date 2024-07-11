@@ -38,29 +38,31 @@ export abstract class AbstractEsriMeasurementStrategy<
       },
     );
     this.sketchViewModel.view.addHandles([drawHandle], HANDLE_GROUP_KEY);
-
     this.sketchViewModel.create(this.tool, {mode: 'click'});
-    this.sketchViewModel.on('create', ({state, graphic}) => {
-      let labelConfiguration: {label: Graphic; labelText: string};
-      switch (state) {
-        case 'start':
-          break; // currently, this event does not trigger any action
-        case 'cancel':
-          console.log(state);
-          this.cleanup();
-          this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
-          break;
-        case 'active':
-          this.previousLabel = this.addLabelToLayer(graphic).label;
-          break;
-        case 'complete':
-          this.isDrawingFinished = true;
-          this.cleanup();
-          labelConfiguration = this.addLabelToLayer(graphic);
-          this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
-          break;
-      }
-    });
+    reactiveUtils.on(
+      () => this.sketchViewModel,
+      'create',
+      ({state, graphic}) => {
+        let labelConfiguration: {label: Graphic; labelText: string};
+        switch (state) {
+          case 'start':
+            break; // currently, this event does not trigger any action
+          case 'cancel':
+            this.cleanup();
+            this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
+            break;
+          case 'active':
+            this.previousLabel = this.addLabelToLayer(graphic).label;
+            break;
+          case 'complete':
+            this.isDrawingFinished = true;
+            this.cleanup();
+            labelConfiguration = this.addLabelToLayer(graphic);
+            this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
+            break;
+        }
+      },
+    );
   }
 
   protected handlePointerMove(event: __esri.ViewPointerMoveEvent): void {
