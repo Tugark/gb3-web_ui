@@ -9,18 +9,16 @@ import MapView from '@arcgis/core/views/MapView';
 import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
 import Point from '@arcgis/core/geometry/Point';
-import {HANDLE_GROUP_KEY} from '../../esri-tool.service';
 import {PolygonType} from '../../../../../types/polygon.type';
+import {MeasurementConstants} from '../../../../../../shared/constants/measurement.constants';
 
 const M2_TO_KM2_CONVERSION_THRESHOLD = 100_000;
-// Used to displace the label from the cursor while drawing. Values are in pixels and are added to the cursor position for label positioning
-const LABEL_DISPLACEMENT_X = 50;
-const LABEL_DISPLACEMENT_Y = 25;
 
 export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy<Polygon, DrawingCallbackHandler['completeMeasurement']> {
+  public override labelDisplacementY = MeasurementConstants.LABEL_DISPLACEMENT.polygon.y;
+  public override labelDisplacementX = MeasurementConstants.LABEL_DISPLACEMENT.polygon.x;
   protected readonly tool: SupportedEsriTool = 'polygon';
   private readonly labelSymbolization: TextSymbol;
-  private labelPosition: Point | undefined;
 
   constructor(
     layer: GraphicsLayer,
@@ -35,10 +33,6 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
     this.tool = polygonType;
     this.sketchViewModel.polygonSymbol = polygonSymbol;
     this.labelSymbolization = labelSymbolization;
-    const handle = this.sketchViewModel.view.on('pointer-move', (event) => {
-      this.labelPosition = this.sketchViewModel.view.toMap({x: event.x + LABEL_DISPLACEMENT_X, y: event.y - LABEL_DISPLACEMENT_Y});
-    });
-    this.sketchViewModel.view.addHandles([handle], HANDLE_GROUP_KEY);
   }
 
   protected override createLabelConfigurationForGeometry(geometry: Polygon): LabelConfiguration {

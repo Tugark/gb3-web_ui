@@ -5,16 +5,10 @@ import {NumberUtils} from '../../../../../../shared/utils/number.utils';
 import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
 import Graphic from '@arcgis/core/Graphic';
-import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
-import {HANDLE_GROUP_KEY} from '../../esri-tool.service';
-
-// Used to displace the label from the cursor while drawing. Values are in pixels and are added to the cursor position for label positioning
-const LABEL_DISPLACEMENT_Y = 15;
 
 export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrategy<Point, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'point';
   private readonly labelSymbolization: TextSymbol;
-  private previousLabel: Graphic | undefined;
 
   constructor(
     layer: __esri.GraphicsLayer,
@@ -27,36 +21,21 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
 
     this.sketchViewModel.pointSymbol = pointSymbol;
     this.labelSymbolization = labelSymbolization;
-    const drawHandle = reactiveUtils.on(
-      () => this.sketchViewModel.view,
-      'pointer-move',
-      (event) => {
-        const point = this.sketchViewModel.view.toMap({x: event.x, y: event.y});
-        const labelConfiguration = this.createLabelConfigurationForGeometry(point);
-        const label = new Graphic({geometry: labelConfiguration.location, symbol: labelConfiguration.symbolization});
-        this.cleanup();
-        this.layer.add(label);
-        this.previousLabel = label;
-      },
-    );
-    this.sketchViewModel.view.addHandles([drawHandle], HANDLE_GROUP_KEY);
   }
 
-  public override cleanup() {
-    if (this.previousLabel) {
-      this.layer.remove(this.previousLabel);
-    }
+  public override handlePointerMove(event: __esri.ViewPointerMoveEvent) {
+    this.labelPosition = this.sketchViewModel.view.toMap({x: event.x, y: event.y - this.labelDisplacementY});
+    const labelConfiguration = this.createLabelConfigurationForGeometry(this.labelPosition);
+    const label = new Graphic({geometry: labelConfiguration.location, symbol: labelConfiguration.symbolization});
+    this.cleanup();
+    this.layer.add(label);
+    this.previousLabel = label;
   }
 
   protected override createLabelConfigurationForGeometry(geometry: Point): LabelConfiguration {
     this.labelSymbolization.text = this.getCoordinateString(geometry);
 
-    return {location: this.getLabelPosition(geometry), symbolization: this.labelSymbolization};
-  }
-
-  private getLabelPosition(geometry: Point): Point {
-    const screenCoords = this.sketchViewModel.view.toScreen(geometry);
-    return this.sketchViewModel.view.toMap({x: screenCoords.x, y: screenCoords.y - LABEL_DISPLACEMENT_Y});
+    return {location: this.labelPosition!, symbolization: this.labelSymbolization};
   }
 
   private getCoordinateString(geometry: __esri.Point) {

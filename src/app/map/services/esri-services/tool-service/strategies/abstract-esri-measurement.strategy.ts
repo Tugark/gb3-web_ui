@@ -9,6 +9,8 @@ import {AbstractEsriDrawableToolStrategy} from './abstract-esri-drawable-tool.st
 import {DrawingCallbackHandler} from '../interfaces/drawing-callback-handler.interface';
 import {UserDrawingLayer} from '../../../../../shared/enums/drawing-layer.enum';
 import {HANDLE_GROUP_KEY} from '../esri-tool.service';
+import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
+import {MeasurementConstants} from '../../../../../shared/constants/measurement.constants';
 
 export type LabelConfiguration = {location: Point; symbolization: TextSymbol};
 
@@ -16,6 +18,10 @@ export abstract class AbstractEsriMeasurementStrategy<
   TGeometry extends Polygon | Polyline | Point,
   TDrawingCallbackHandler extends DrawingCallbackHandler['completeMeasurement'],
 > extends AbstractEsriDrawableToolStrategy<TDrawingCallbackHandler> {
+  public labelPosition: Point | undefined;
+  public previousLabel: Graphic | undefined;
+  public readonly labelDisplacementY: number = MeasurementConstants.LABEL_DISPLACEMENT.default.y;
+  public readonly labelDisplacementX: number = MeasurementConstants.LABEL_DISPLACEMENT.default.x;
   public readonly internalLayerType: UserDrawingLayer = UserDrawingLayer.Measurements;
   protected isDrawingFinished = false;
 
@@ -24,26 +30,31 @@ export abstract class AbstractEsriMeasurementStrategy<
   }
 
   public start(): void {
-    let previousLabel: Graphic | undefined;
+    const drawHandle = reactiveUtils.on(
+      () => this.sketchViewModel.view,
+      'pointer-move',
+      (event) => {
+        this.handlePointerMove(event);
+      },
+    );
+    this.sketchViewModel.view.addHandles([drawHandle], HANDLE_GROUP_KEY);
+
     this.sketchViewModel.create(this.tool, {mode: 'click'});
     this.sketchViewModel.on('create', ({state, graphic}) => {
       let labelConfiguration: {label: Graphic; labelText: string};
       switch (state) {
         case 'start':
-          break; // currently, these events do not trigger any action
+          break; // currently, this event does not trigger any action
         case 'cancel':
-          if (previousLabel) {
-            this.layer.remove(previousLabel);
-          }
-          this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
+          console.log(state);
           this.cleanup();
+          this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
           break;
         case 'active':
-          previousLabel = this.addLabelToLayer(graphic, previousLabel).label;
+          this.previousLabel = this.addLabelToLayer(graphic).label;
           break;
         case 'complete':
           this.isDrawingFinished = true;
-          this.layer.remove(previousLabel!);
           this.cleanup();
           labelConfiguration = this.addLabelToLayer(graphic);
           this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
@@ -52,16 +63,20 @@ export abstract class AbstractEsriMeasurementStrategy<
     });
   }
 
-  public cleanup(): void {
-    // Only implemented in EsriPointMeasurementStrategy
+  protected handlePointerMove(event: __esri.ViewPointerMoveEvent): void {
+    this.labelPosition = this.sketchViewModel.view.toMap({x: event.x + this.labelDisplacementX, y: event.y - this.labelDisplacementY});
   }
 
-  public addLabelToLayer(graphic: Graphic, previousLabel?: Graphic | undefined): {label: Graphic; labelText: string} {
+  public cleanup(): void {
+    if (this.previousLabel) {
+      this.layer.remove(this.previousLabel);
+    }
+  }
+
+  public addLabelToLayer(graphic: Graphic): {label: Graphic; labelText: string} {
     const graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
     const labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
-    if (previousLabel) {
-      this.layer.remove(previousLabel);
-    }
+    this.cleanup();
     this.layer.add(labelConfiguration.label);
     return labelConfiguration;
   }

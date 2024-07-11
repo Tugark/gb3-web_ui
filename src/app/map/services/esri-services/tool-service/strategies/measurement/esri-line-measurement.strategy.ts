@@ -5,12 +5,8 @@ import {NumberUtils} from '../../../../../../shared/utils/number.utils';
 import {AbstractEsriMeasurementStrategy, LabelConfiguration} from '../abstract-esri-measurement.strategy';
 import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
-import Point from '@arcgis/core/geometry/Point';
 
 const M_TO_KM_CONVERSION_THRESHOLD = 10_000;
-// Used to displace the label from the cursor while drawing. Values are in pixels and are added to the cursor position for label positioning
-const LABEL_DISPLACEMENT_Y = 15;
-
 export class EsriLineMeasurementStrategy extends AbstractEsriMeasurementStrategy<Polyline, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'polyline';
   private readonly labelSymbolization: TextSymbol;
@@ -30,15 +26,8 @@ export class EsriLineMeasurementStrategy extends AbstractEsriMeasurementStrategy
 
   protected override createLabelConfigurationForGeometry(geometry: Polyline): LabelConfiguration {
     this.labelSymbolization.text = this.getRoundedPolylineLengthString(geometry);
-    const lastVertex = this.getLabelPosition(geometry);
 
-    return {location: lastVertex, symbolization: this.labelSymbolization};
-  }
-
-  private getLabelPosition(geometry: Polyline): Point {
-    const lastPoint = geometry.getPoint(0, geometry.paths[0].length - 1);
-    const screenCoords = this.sketchViewModel.view.toScreen(lastPoint);
-    return this.sketchViewModel.view.toMap({x: screenCoords.x, y: screenCoords.y - LABEL_DISPLACEMENT_Y});
+    return {location: this.labelPosition!, symbolization: this.labelSymbolization};
   }
 
   private getRoundedPolylineLengthString(polyline: Polyline): string {
