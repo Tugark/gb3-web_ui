@@ -7,6 +7,8 @@ import TextSymbol from '@arcgis/core/symbols/TextSymbol';
 import Map from '@arcgis/core/Map';
 import Graphic from '@arcgis/core/Graphic';
 import Point from '@arcgis/core/geometry/Point';
+import {Subject} from 'rxjs';
+import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 class EsriPointMeasurementStrategyWrapper extends EsriPointMeasurementStrategy {
   public get svm() {
@@ -106,6 +108,23 @@ describe('EsriPointMeasurementStrategy', () => {
 
       const addedGraphic = layer.graphics.getItemAt(0);
       expect((addedGraphic.symbol as TextSymbol).text).toEqual(`${location.x}/${location.y}`);
+    });
+  });
+
+  describe('pointer move', () => {
+    let triggerOnPointerMove: Subject<__esri.ViewPointerMoveEvent>;
+
+    it('trigger the pointer move event', () => {
+      triggerOnPointerMove = new Subject<__esri.ViewPointerMoveEvent>();
+      function fakeCall(target: () => undefined, eventName: string, callBack: (event: any) => void): IHandle {
+        if (eventName === 'pointer-move') {
+          triggerOnPointerMove.subscribe(callBack);
+        }
+        return {remove: () => {}};
+      }
+      const spy = spyOn(reactiveUtils, 'on').and.callFake(fakeCall);
+
+      triggerOnPointerMove.next({x: 42, y: 69} as __esri.ViewPointerMoveEvent);
     });
   });
 

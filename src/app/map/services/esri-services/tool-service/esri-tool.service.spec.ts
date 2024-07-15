@@ -180,6 +180,16 @@ describe('EsriToolService', () => {
         service.initializeMeasurement('measure-circle');
         expect(polygonSpy).toHaveBeenCalled();
       });
+      it('cancels the previous tool when a new one is selected', () => {
+        const polygonSpy = spyOn(EsriAreaMeasurementStrategy.prototype, 'start');
+        const lineSpy = spyOn(EsriLineMeasurementStrategy.prototype, 'start');
+        const cancelSpy = spyOn(service, 'cancelTool');
+        service.initializeMeasurement('measure-area');
+        service.initializeMeasurement('measure-line');
+        expect(polygonSpy).toHaveBeenCalled();
+        expect(lineSpy).toHaveBeenCalled();
+        expect(cancelSpy).toHaveBeenCalled();
+      });
     });
 
     describe('Drawing', () => {
