@@ -6,18 +6,15 @@ import Polygon from '@arcgis/core/geometry/Polygon';
 import SimpleFillSymbol from '@arcgis/core/symbols/SimpleFillSymbol';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import MapView from '@arcgis/core/views/MapView';
-import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
 import Point from '@arcgis/core/geometry/Point';
-import {PolygonType} from '../../../../../types/polygon.type';
 import {MeasurementConstants} from '../../../../../../shared/constants/measurement.constants';
+import {SupportedEsriPolygonTool} from '../supported-esri-polygon-tool.type';
 
 const M2_TO_KM2_CONVERSION_THRESHOLD = 100_000;
 
 export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy<Polygon, DrawingCallbackHandler['completeMeasurement']> {
-  public override labelDisplacementY = MeasurementConstants.LABEL_DISPLACEMENT.polygon.y;
-  public override labelDisplacementX = MeasurementConstants.LABEL_DISPLACEMENT.polygon.x;
-  protected readonly tool: SupportedEsriTool = 'polygon';
+  protected readonly tool: SupportedEsriPolygonTool = 'polygon';
   private readonly labelSymbolization: TextSymbol;
 
   constructor(
@@ -26,13 +23,15 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
     polygonSymbol: SimpleFillSymbol,
     labelSymbolization: TextSymbol,
     completeDrawingCallbackHandler: DrawingCallbackHandler['completeMeasurement'],
-    polygonType: PolygonType,
+    polygonType: SupportedEsriPolygonTool,
   ) {
     super(layer, mapView, completeDrawingCallbackHandler);
 
     this.tool = polygonType;
     this.sketchViewModel.polygonSymbol = polygonSymbol;
     this.labelSymbolization = labelSymbolization;
+    this.labelDisplacementY = MeasurementConstants.LABEL_DISPLACEMENT[this.tool].y;
+    this.labelDisplacementX = MeasurementConstants.LABEL_DISPLACEMENT[this.tool].x;
   }
 
   protected override createLabelConfigurationForGeometry(geometry: Polygon): LabelConfiguration {
@@ -58,7 +57,17 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
     let areaUnit = 'm²';
     let distanceUnit = 'm';
     let area = geometryEngine.planarArea(polygon, 'square-meters');
-    let distance = this.tool === 'polygon' ? geometryEngine.planarLength(polygon, 'meters') : Math.sqrt(area / Math.PI);
+    let distance = 0;
+    switch (this.tool) {
+      case 'polygon':
+        distance = geometryEngine.planarLength(polygon, 'meters');
+        break;
+      case 'circle':
+        distance = Math.sqrt(area / Math.PI);
+        break;
+      case 'rectangle':
+        break;
+    }
     const distanceSymbol = this.tool === 'polygon' ? 'U' : 'r';
 
     if (area > M2_TO_KM2_CONVERSION_THRESHOLD) {

@@ -3,10 +3,12 @@ import Polyline from '@arcgis/core/geometry/Polyline';
 import TextSymbol from '@arcgis/core/symbols/TextSymbol';
 import {NumberUtils} from '../../../../../../shared/utils/number.utils';
 import {AbstractEsriMeasurementStrategy, LabelConfiguration} from '../abstract-esri-measurement.strategy';
-import {SupportedEsriTool} from '../abstract-esri-drawable-tool.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
+import {SupportedEsriTool} from '../supported-esri-tool.type';
+import {MeasurementConstants} from '../../../../../../shared/constants/measurement.constants';
 
 const M_TO_KM_CONVERSION_THRESHOLD = 10_000;
+
 export class EsriLineMeasurementStrategy extends AbstractEsriMeasurementStrategy<Polyline, DrawingCallbackHandler['completeMeasurement']> {
   protected readonly tool: SupportedEsriTool = 'polyline';
   private readonly labelSymbolization: TextSymbol;
@@ -22,6 +24,8 @@ export class EsriLineMeasurementStrategy extends AbstractEsriMeasurementStrategy
 
     this.sketchViewModel.polylineSymbol = polylineSymbol;
     this.labelSymbolization = labelSymbolization;
+    this.labelDisplacementY = MeasurementConstants.LABEL_DISPLACEMENT[this.tool].y;
+    this.labelDisplacementX = MeasurementConstants.LABEL_DISPLACEMENT[this.tool].x;
   }
 
   protected override createLabelConfigurationForGeometry(geometry: Polyline): LabelConfiguration {

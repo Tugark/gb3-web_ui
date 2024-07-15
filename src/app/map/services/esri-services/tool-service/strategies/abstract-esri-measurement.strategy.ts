@@ -10,7 +10,6 @@ import {DrawingCallbackHandler} from '../interfaces/drawing-callback-handler.int
 import {UserDrawingLayer} from '../../../../../shared/enums/drawing-layer.enum';
 import {HANDLE_GROUP_KEY} from '../esri-tool.service';
 import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
-import {MeasurementConstants} from '../../../../../shared/constants/measurement.constants';
 
 export type LabelConfiguration = {location: Point; symbolization: TextSymbol};
 
@@ -18,23 +17,23 @@ export abstract class AbstractEsriMeasurementStrategy<
   TGeometry extends Polygon | Polyline | Point,
   TDrawingCallbackHandler extends DrawingCallbackHandler['completeMeasurement'],
 > extends AbstractEsriDrawableToolStrategy<TDrawingCallbackHandler> {
-  public labelPosition: Point | undefined;
-  public previousLabel: Graphic | undefined;
-  public readonly labelDisplacementY: number = MeasurementConstants.LABEL_DISPLACEMENT.default.y;
-  public readonly labelDisplacementX: number = MeasurementConstants.LABEL_DISPLACEMENT.default.x;
   public readonly internalLayerType: UserDrawingLayer = UserDrawingLayer.Measurements;
+  protected labelPosition: Point | undefined;
+  protected previousLabel: Graphic | undefined;
+  protected labelDisplacementY: number = 0;
+  protected labelDisplacementX: number = 0;
   protected isDrawingFinished = false;
 
   protected constructor(layer: GraphicsLayer, mapView: MapView, completeDrawingCallbackHandler: TDrawingCallbackHandler) {
     super(layer, mapView, completeDrawingCallbackHandler);
   }
 
-  public start(): void {
+  public start() {
     const drawHandle = reactiveUtils.on(
       () => this.sketchViewModel.view,
       'pointer-move',
       (event) => {
-        this.getLabelPositionFromPointerMove(event);
+        this.handlePointerMove(event);
       },
     );
     this.sketchViewModel.view.addHandles([drawHandle], HANDLE_GROUP_KEY);
@@ -42,8 +41,7 @@ export abstract class AbstractEsriMeasurementStrategy<
     reactiveUtils.on(
       () => this.sketchViewModel,
       'create',
-      ({state, graphic}) => {
-        let labelConfiguration: {label: Graphic; labelText: string};
+      ({state, graphic}: {state: __esri.SketchViewModelCreateEvent['state']; graphic: Graphic}) => {
         switch (state) {
           case 'start':
             break; // currently, this event does not trigger any action
@@ -55,27 +53,24 @@ export abstract class AbstractEsriMeasurementStrategy<
             this.previousLabel = this.addLabelToLayer(graphic).label;
             break;
           case 'complete':
-            this.isDrawingFinished = true;
-            this.removePreviousLabel();
-            labelConfiguration = this.addLabelToLayer(graphic);
-            this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
+            this.handleCompleteSketchViewModel(graphic);
             break;
         }
       },
     );
   }
 
-  protected getLabelPositionFromPointerMove(event: __esri.ViewPointerMoveEvent): void {
+  protected handlePointerMove(event: __esri.ViewPointerMoveEvent) {
     this.labelPosition = this.sketchViewModel.view.toMap({x: event.x + this.labelDisplacementX, y: event.y - this.labelDisplacementY});
   }
 
-  protected removePreviousLabel(): void {
+  protected removePreviousLabel() {
     if (this.previousLabel) {
       this.layer.remove(this.previousLabel);
     }
   }
 
-  public addLabelToLayer(graphic: Graphic): {label: Graphic; labelText: string} {
+  protected addLabelToLayer(graphic: Graphic): {label: Graphic; labelText: string} {
     const graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
     const labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
     this.removePreviousLabel();
@@ -90,6 +85,12 @@ export abstract class AbstractEsriMeasurementStrategy<
    * @protected
    */
   protected abstract createLabelConfigurationForGeometry(geometry: TGeometry): LabelConfiguration;
+
+  private handleCompleteSketchViewModel(graphic: Graphic): void {
+    this.isDrawingFinished = true;
+    const labelConfiguration = this.addLabelToLayer(graphic);
+    this.completeDrawingCallbackHandler(graphic, labelConfiguration.label, labelConfiguration.labelText);
+  }
 
   private createLabelForGeometry(geometry: TGeometry, belongsToGraphic: string): {label: Graphic; labelText: string} {
     const {location, symbolization} = this.createLabelConfigurationForGeometry(geometry);
