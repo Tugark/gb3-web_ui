@@ -127,7 +127,7 @@ describe('EsriToolService', () => {
         )
         .subscribe();
     });
-    it('adds an Esri handle for this service group on drawing start', () => {
+    it('adds Esri handles for this service group on drawing start for Escape-Key and Pointer-Move-Events', () => {
       // add the graphic layer to the view to avoid the initialization
       const spy = spyOn(mapViewService.mapView, 'addHandles');
       mapViewService.mapView.map.layers.add(
@@ -138,11 +138,12 @@ describe('EsriToolService', () => {
       store.overrideSelector(selectDrawingLayers, [{id: userDrawingLayerId} as DrawingActiveMapItem]);
       store.refreshState();
 
-      service.initializeMeasurement('measure-line');
+      service.initializeMeasurement('measure-point');
 
-      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledTimes(2);
       expect((spy.calls.first().args[0] as any).remove).toBeDefined(); // we know that it must be a WatchHandle
       expect(spy.calls.first().args[1]).toEqual('EsriToolService');
+      expect(spy.calls.mostRecent().args[1]).toEqual('EsriToolService');
     });
   });
 
