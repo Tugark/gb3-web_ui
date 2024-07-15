@@ -9,7 +9,7 @@ import MapView from '@arcgis/core/views/MapView';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
 import Point from '@arcgis/core/geometry/Point';
 import {MeasurementConstants} from '../../../../../../shared/constants/measurement.constants';
-import {SupportedEsriPolygonTool} from '../supported-esri-polygon-tool.type';
+import {SupportedEsriPolygonTool} from '../supported-esri-tool.type';
 
 const M2_TO_KM2_CONVERSION_THRESHOLD = 100_000;
 
@@ -35,7 +35,7 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
   }
 
   protected override createLabelConfigurationForGeometry(geometry: Polygon): LabelConfiguration {
-    this.labelSymbolization.text = this.getRoundedPolygonAreaString(geometry);
+    this.labelSymbolization.text = this.getRoundedPolygonAreaAndCircumferenceString(geometry);
 
     return {location: this.getLabelPosition(geometry), symbolization: this.labelSymbolization};
   }
@@ -53,22 +53,13 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
    * @param polygon
    * @private
    */
-  private getRoundedPolygonAreaString(polygon: Polygon): string {
+  private getRoundedPolygonAreaAndCircumferenceString(polygon: Polygon): string {
     let areaUnit = 'm²';
     let distanceUnit = 'm';
-    let area = geometryEngine.planarArea(polygon, 'square-meters');
-    let distance = 0;
-    switch (this.tool) {
-      case 'polygon':
-        distance = geometryEngine.planarLength(polygon, 'meters');
-        break;
-      case 'circle':
-        distance = Math.sqrt(area / Math.PI);
-        break;
-      case 'rectangle':
-        break;
-    }
     const distanceSymbol = this.tool === 'polygon' ? 'U' : 'r';
+
+    let area = geometryEngine.planarArea(polygon, 'square-meters');
+    let distance = this.calculateDistance(polygon, area);
 
     if (area > M2_TO_KM2_CONVERSION_THRESHOLD) {
       area = area / 1_000_000;
@@ -78,5 +69,19 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
     }
 
     return `A: ${NumberUtils.roundToDecimals(area, 2)} ${areaUnit}\n${distanceSymbol}: ${NumberUtils.roundToDecimals(distance, 2)} ${distanceUnit}`;
+  }
+
+  private calculateDistance(polygon: Polygon, area: number): number {
+    let distance;
+    switch (this.tool) {
+      case 'polygon':
+      case 'rectangle':
+        distance = geometryEngine.planarLength(polygon, 'meters');
+        break;
+      case 'circle':
+        distance = Math.sqrt(area / Math.PI);
+        break;
+    }
+    return distance;
   }
 }

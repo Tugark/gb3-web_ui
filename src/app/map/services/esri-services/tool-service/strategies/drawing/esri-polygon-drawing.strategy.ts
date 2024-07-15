@@ -3,8 +3,7 @@ import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import MapView from '@arcgis/core/views/MapView';
 import {AbstractEsriDrawingStrategy} from '../abstract-esri-drawing.strategy';
 import {DrawingCallbackHandler} from '../../interfaces/drawing-callback-handler.interface';
-import {SupportedEsriPolygonTool} from '../supported-esri-polygon-tool.type';
-import {SupportedEsriTool} from '../supported-esri-tool.type';
+import {SupportedEsriPolygonTool, SupportedEsriTool} from '../supported-esri-tool.type';
 
 export class EsriPolygonDrawingStrategy extends AbstractEsriDrawingStrategy<DrawingCallbackHandler['completeDrawing']> {
   protected readonly tool: SupportedEsriTool = 'polygon';

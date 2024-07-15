@@ -19,7 +19,7 @@ export abstract class AbstractEsriMeasurementStrategy<
 > extends AbstractEsriDrawableToolStrategy<TDrawingCallbackHandler> {
   public readonly internalLayerType: UserDrawingLayer = UserDrawingLayer.Measurements;
   protected labelPosition: Point | undefined;
-  protected previousLabel: Graphic | undefined;
+  protected currentLabel: Graphic | undefined;
   protected labelDisplacementY: number = 0;
   protected labelDisplacementX: number = 0;
   protected isDrawingFinished = false;
@@ -46,11 +46,11 @@ export abstract class AbstractEsriMeasurementStrategy<
           case 'start':
             break; // currently, this event does not trigger any action
           case 'cancel':
-            this.removePreviousLabel();
+            this.removeCurrentLabel();
             this.sketchViewModel.view.removeHandles(HANDLE_GROUP_KEY);
             break;
           case 'active':
-            this.previousLabel = this.addLabelToLayer(graphic).label;
+            this.currentLabel = this.addLabelToLayer(graphic).label;
             break;
           case 'complete':
             this.handleCompleteSketchViewModel(graphic);
@@ -64,16 +64,16 @@ export abstract class AbstractEsriMeasurementStrategy<
     this.labelPosition = this.sketchViewModel.view.toMap({x: event.x + this.labelDisplacementX, y: event.y - this.labelDisplacementY});
   }
 
-  protected removePreviousLabel() {
-    if (this.previousLabel) {
-      this.layer.remove(this.previousLabel);
+  protected removeCurrentLabel() {
+    if (this.currentLabel) {
+      this.layer.remove(this.currentLabel);
     }
   }
 
   protected addLabelToLayer(graphic: Graphic): {label: Graphic; labelText: string} {
     const graphicIdentifier = this.setAndGetIdentifierOnGraphic(graphic);
     const labelConfiguration = this.createLabelForGeometry(graphic.geometry as TGeometry, graphicIdentifier);
-    this.removePreviousLabel();
+    this.removeCurrentLabel();
     this.layer.add(labelConfiguration.label);
     return labelConfiguration;
   }

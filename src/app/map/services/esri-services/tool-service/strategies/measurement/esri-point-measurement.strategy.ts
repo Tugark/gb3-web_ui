@@ -29,9 +29,9 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
     this.labelPosition = this.sketchViewModel.view.toMap({x: event.x, y: event.y - this.labelDisplacementY});
     const labelConfiguration = this.createLabelConfigurationForGeometry(this.labelPosition);
     const label = new Graphic({geometry: labelConfiguration.location, symbol: labelConfiguration.symbolization});
-    this.removePreviousLabel();
+    this.removeCurrentLabel();
     this.layer.add(label);
-    this.previousLabel = label;
+    this.currentLabel = label;
   }
 
   protected override createLabelConfigurationForGeometry(geometry: Point): LabelConfiguration {
