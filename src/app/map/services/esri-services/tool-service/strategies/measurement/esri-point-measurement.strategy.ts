@@ -27,7 +27,8 @@ export class EsriPointMeasurementStrategy extends AbstractEsriMeasurementStrateg
 
   protected override handlePointerMove(event: __esri.ViewPointerMoveEvent) {
     this.labelPosition = this.sketchViewModel.view.toMap({x: event.x, y: event.y - this.labelDisplacementY});
-    const labelConfiguration = this.createLabelConfigurationForGeometry(this.labelPosition);
+    const cursorPosition = this.sketchViewModel.view.toMap({x: event.x, y: event.y});
+    const labelConfiguration = this.createLabelConfigurationForGeometry(cursorPosition);
     const label = new Graphic({geometry: labelConfiguration.location, symbol: labelConfiguration.symbolization});
     this.removeCurrentLabel();
     this.layer.add(label);
