@@ -56,7 +56,7 @@ export class EsriAreaMeasurementStrategy extends AbstractEsriMeasurementStrategy
   private getRoundedPolygonAreaAndCircumferenceString(polygon: Polygon): string {
     let areaUnit = 'm²';
     let distanceUnit = 'm';
-    const distanceSymbol = this.tool === 'polygon' ? 'U' : 'r';
+    const distanceSymbol = this.tool === 'circle' ? 'r' : 'U';
 
     let area = geometryEngine.planarArea(polygon, 'square-meters');
     let distance = this.calculateDistance(polygon, area);

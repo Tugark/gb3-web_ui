@@ -7,10 +7,15 @@ import Graphic from '@arcgis/core/Graphic';
 import {EsriLineMeasurementStrategy} from './esri-line-measurement.strategy';
 import SimpleLineSymbol from '@arcgis/core/symbols/SimpleLineSymbol';
 import Polyline from '@arcgis/core/geometry/Polyline';
+import Point from '@arcgis/core/geometry/Point';
 
 class EsriLineMeasurementStrategyWrapper extends EsriLineMeasurementStrategy {
   public get svm() {
     return this.sketchViewModel;
+  }
+
+  public simulateHandlePointerMove(event: __esri.ViewPointerMoveEvent) {
+    this.handlePointerMove(event);
   }
 }
 
@@ -101,30 +106,23 @@ describe('EsriLineMeasurementStrategy', () => {
       expect(layer.graphics.length).toEqual(1);
     });
 
-    // it('creates the label at the last point of the line geometry', () => {
-    //   const strategy = new EsriLineMeasurementStrategyWrapper(layer, mapView, lineSymbol, textSymbol, () => callbackHandler.handle());
-    //   const location = new Polyline({
-    //     spatialReference: {wkid: 2056},
-    //     paths: [
-    //       [
-    //         [0, 0],
-    //         [12, 0],
-    //         [555, 64],
-    //       ],
-    //     ],
-    //   });
-    //   const graphic = new Graphic({geometry: location});
-    //   strategy.handlePointerMove({x: 12, y: 12} as __esri.ViewPointerMoveEvent);
-    //
-    //   strategy.start();
-    //   strategy.svm.emit('create', {state: 'complete', graphic: graphic});
-    //
-    //   const addedGraphic = layer.graphics.getItemAt(0);
-    //   const numberOfVertices = location.paths[0].length;
-    //   expect(addedGraphic.geometry.type).toEqual('point');
-    //   expect((addedGraphic.geometry as Point).x).toEqual(location.getPoint(0, numberOfVertices - 1).x);
-    //   expect((addedGraphic.geometry as Point).y).toEqual(location.getPoint(0, numberOfVertices - 1).y);
-    // });
+    it('creates the label at the correct location', () => {
+      const strategy = new EsriLineMeasurementStrategyWrapper(layer, mapView, lineSymbol, textSymbol, () => callbackHandler.handle());
+      const location = new Point({x: 1337, y: 42});
+      const screenLocation = {x: 42, y: 69};
+      spyOn(strategy.svm.view, 'toMap').and.returnValue(new Point({x: location.x, y: location.y}));
+
+      const graphic = new Graphic({geometry: location});
+      strategy.simulateHandlePointerMove({x: screenLocation.x, y: screenLocation.y} as __esri.ViewPointerMoveEvent);
+
+      strategy.start();
+      strategy.svm.emit('create', {state: 'complete', graphic: graphic});
+
+      const addedGraphic = layer.graphics.getItemAt(0);
+      expect(addedGraphic.geometry.type).toEqual('point');
+      expect((addedGraphic.geometry as Point).x).toEqual(location.x);
+      expect((addedGraphic.geometry as Point).y).toEqual(location.y);
+    });
 
     it('applies the defined styling to the created label', () => {
       textSymbol = new TextSymbol({haloColor: 'red', xoffset: 42, color: 'blue'});

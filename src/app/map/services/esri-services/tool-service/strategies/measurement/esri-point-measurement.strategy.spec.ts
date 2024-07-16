@@ -7,12 +7,18 @@ import TextSymbol from '@arcgis/core/symbols/TextSymbol';
 import Map from '@arcgis/core/Map';
 import Graphic from '@arcgis/core/Graphic';
 import Point from '@arcgis/core/geometry/Point';
-import {Subject} from 'rxjs';
-import * as reactiveUtils from '@arcgis/core/core/reactiveUtils';
 
 class EsriPointMeasurementStrategyWrapper extends EsriPointMeasurementStrategy {
   public get svm() {
     return this.sketchViewModel;
+  }
+
+  public get labelPos() {
+    return this.labelPosition;
+  }
+
+  public simulateHandlePointerMove(event: __esri.ViewPointerMoveEvent) {
+    this.handlePointerMove(event);
   }
 }
 
@@ -68,19 +74,23 @@ describe('EsriPointMeasurementStrategy', () => {
       expect(layer.graphics.length).toEqual(1);
     });
 
-    // it('creates the label at the correct location ', () => {
-    //   const strategy = new EsriPointMeasurementStrategyWrapper(layer, mapView, pointSymbol, textSymbol, () => callbackHandler.handle());
-    //   const location = new Point({x: 1337, y: 42});
-    //   const graphic = new Graphic({geometry: location});
-    //
-    //   strategy.start();
-    //   strategy.svm.emit('create', {state: 'complete', graphic: graphic});
-    //
-    //   const addedGraphic = layer.graphics.getItemAt(0);
-    //   expect(addedGraphic.geometry.type).toEqual('point');
-    //   expect((addedGraphic.geometry as Point).x).toEqual(location.x);
-    //   expect((addedGraphic.geometry as Point).y).toEqual(location.y);
-    // });
+    it('creates the label at the correct location ', () => {
+      const strategy = new EsriPointMeasurementStrategyWrapper(layer, mapView, pointSymbol, textSymbol, () => callbackHandler.handle());
+      const location = new Point({x: 1337, y: 42});
+      const screenLocation = {x: 42, y: 69};
+      const graphic = new Graphic({geometry: location});
+
+      spyOn(strategy.svm.view, 'toMap').and.returnValue(new Point({x: location.x, y: location.y}));
+
+      strategy.start();
+      strategy.simulateHandlePointerMove({x: screenLocation.x, y: screenLocation.y} as __esri.ViewPointerMoveEvent);
+      strategy.svm.emit('create', {state: 'complete', graphic: graphic});
+
+      const addedGraphic = layer.graphics.getItemAt(0);
+      expect(addedGraphic.geometry.type).toEqual('point');
+      expect((addedGraphic.geometry as Point).x).toEqual(location.x);
+      expect((addedGraphic.geometry as Point).y).toEqual(location.y);
+    });
 
     it('applies the defined styling to the created graphic', () => {
       textSymbol = new TextSymbol({haloColor: 'red', xoffset: 42, color: 'blue'});
@@ -111,20 +121,19 @@ describe('EsriPointMeasurementStrategy', () => {
     });
   });
 
-  describe('pointer move', () => {
-    let triggerOnPointerMove: Subject<__esri.ViewPointerMoveEvent>;
+  describe('handlePointerMove', () => {
+    it('sets the labelPosition correctly and adds the label to the map at the correct location', () => {
+      const strategy = new EsriPointMeasurementStrategyWrapper(layer, mapView, pointSymbol, textSymbol, () => callbackHandler.handle());
+      const location = new Point({x: 1, y: 2});
+      const screenLocation = {x: 42, y: 69};
+      spyOn(strategy.svm.view, 'toMap').and.returnValue(new Point({x: location.x, y: location.y}));
 
-    it('trigger the pointer move event', () => {
-      triggerOnPointerMove = new Subject<__esri.ViewPointerMoveEvent>();
-      function fakeCall(target: () => undefined, eventName: string, callBack: (event: any) => void): IHandle {
-        if (eventName === 'pointer-move') {
-          triggerOnPointerMove.subscribe(callBack);
-        }
-        return {remove: () => {}};
-      }
-      const spy = spyOn(reactiveUtils, 'on').and.callFake(fakeCall);
+      strategy.simulateHandlePointerMove({x: screenLocation.x, y: screenLocation.y} as __esri.ViewPointerMoveEvent);
 
-      triggerOnPointerMove.next({x: 42, y: 69} as __esri.ViewPointerMoveEvent);
+      expect(strategy.labelPos).toEqual(location);
+      expect(layer.graphics.length).toEqual(1);
+      expect((layer.graphics.getItemAt(0).geometry as Point).x).toEqual(location.x);
+      expect((layer.graphics.getItemAt(0).geometry as Point).y).toEqual(location.y);
     });
   });
 
