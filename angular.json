@@ -136,6 +136,7 @@
               "outputHashing": "all"
             },
             "production-dev-ebp": {
+              "baseHref": "/gb3-web_ui/",
               "budgets": [
                 {
                   "type": "initial",

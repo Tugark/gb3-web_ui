@@ -5,7 +5,7 @@ import {RuntimeConfig} from '../interfaces/runtime-config.interface';
  */
 export const defaultRuntimeConfig: RuntimeConfig[] = [
   {
-    hostMatch: 'calm-plant-0ecbec603.2.azurestaticapps.net',
+    hostMatch: 'tugark.github.io',
     apiBasePaths: {
       gb2Api: {
         baseUrl: 'https://maps.zh.ch/gb3',
