@@ -18,18 +18,16 @@ permissions:
 
 jobs:
   node:
-    if: github.ref == 'disabled'
     name: Node
     uses: ./.github/workflows/node-tests.yml
 
   docker:
-    if: github.ref == 'disabled'
     name: Docker
     uses: ./.github/workflows/docker-dry-run.yml
 
   deploy-dev:
     name: Deploy dev environment
-    if: github.ref == 'refs/heads/main' # todo: change
+    if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/node-deploy.yml
 
     # todo: sonar analysis
