@@ -30,41 +30,6 @@ jobs:
   deploy-dev:
     name: Deploy dev environment
     if: github.ref == 'refs/heads/main' # todo: change
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Install dependencies and build
-        env:
-          APP_RELEASE: 'EBP Dev Release'
-        run: |
-          npm ci
-          npm run build-dev-ebp
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist/browser
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: deploy-dev
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-
+    uses: ./.github/workflows/node-deploy.yml
 
     # todo: sonar analysis
