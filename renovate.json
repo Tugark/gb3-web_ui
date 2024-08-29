@@ -1,13 +1,10 @@
 {
-  "extends": ["local>Renovate_Bot/renovate-presets", "local>Renovate_Bot/renovate-presets:angular"],
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "assignees": ["gb3-developers"],
   "reviewers": ["gb3-developers"],
-  "platform": "github",
-  "platformAutomerge": true,
   "packageRules": [
     {
-      "matchManagers": ["docker", "kubernetes"],
+      "matchManagers": ["dockerfile", "kubernetes"],
       "automerge": false,
       "description": "Do not automerge docker or kubernetes updates as they have a great potential for breaking changes."
     },
